@@ -51,13 +51,15 @@ BEGIN
     SET @SQL = 'DELETE FROM ' + @destination_table + ' WHERE collection_time < DATEADD(day, -' + CAST(@retention AS VARCHAR(10)) + ', GETDATE());';
     EXEC (@SQL);
 
-    -- delete data coming from the diagnostic sessions
-    SET @SQL = '
-DECLARE @excludes TABLE (account_name NVARCHAR(500));
+	-- delete data coming from the service accounts
+	SET @SQL = 'DECLARE @excludes TABLE (account_name NVARCHAR(500));
 INSERT INTO @excludes SELECT service_account FROM sys.dm_server_services;
-DELETE FROM dbo.WhoIsActive WHERE collection_time > DATEADD(MINUTE, -10, GETDATE()) AND login_name IN (SELECT account_name FROM @excludes);
-'
-    EXEC (@SQL);
-	
+DELETE FROM ' + @destination_table + ' WHERE login_name IN (SELECT account_name FROM @excludes);';
+	EXEC (@SQL);
+
+	-- delete data coming from the diagnostics session
+	SET @SQL = 'DELETE FROM ' + @destination_table + ' WHERE CAST([sql_text] AS varchar(max)) LIKE ''%sp_server_diagnostics%'';';
+	EXEC (@SQL);
+
     WAITFOR DELAY '00:00:03'
 END
