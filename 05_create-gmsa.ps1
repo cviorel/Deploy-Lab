@@ -29,7 +29,7 @@ foreach ($service in $serviceAccounts) {
             $newAccount = New-ADServiceAccount -Name $service -PrincipalsAllowedToRetrieveManagedPassword $allowedHosts -Enabled:$true `
                 -DNSHostName "${service}.$($fqdn.Forest)" -SamAccountName $service -ManagedPasswordIntervalInDays 30 `
                 -Description "gMSA for the $($SQLInstanceName) instance $($service) on $($ClusterCNO) Cluster" `
-                -TrustedForDelegation:$true `
+                -TrustedForDelegation:$false `
                 -KerberosEncryptionType AES128, AES256 `
                 -Server $fqdn.Forest `
                 -Credential $domainAdminCreds `
