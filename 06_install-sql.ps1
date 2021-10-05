@@ -215,6 +215,8 @@ foreach ($node in $sqlNodes.Keys) {
 #endregion Disable Named Pipes
 
 #region NTFSPermissions
+$sqlserviceuser = @()
+$sqlagentuser = @()
 foreach ($node in $sqlNodes.Keys) {
     $sqlserviceuser += (Get-DbaService -ComputerName $node -InstanceName $SQLInstanceName -Type Engine).StartName
     $sqlagentuser += (Get-DbaService -ComputerName $node -InstanceName $SQLInstanceName -Type Agent).StartName
@@ -240,6 +242,8 @@ $scriptBlockNTFSPermissions = {
         Start-Process -FilePath "icacls.exe" -ArgumentList "$dir /remove BUILTIN\Users /T" -NoNewWindow -Wait
         Start-Process -FilePath "icacls.exe" -ArgumentList "$dir /grant:rx ""$using:sqlserviceuser"":(OI)(CI)(F) /C" -NoNewWindow -Wait
         Start-Process -FilePath "icacls.exe" -ArgumentList "$dir /grant:rx ""$using:sqlagentuser"":(OI)(CI)(F) /C" -NoNewWindow -Wait
+        Write-Output "------- $dir ----------"
+        (Get-Acl $dir).Access | Where-Object { $_.IdentityReference -match "$([regex]::Escape($using:sqlserviceuser))|$([regex]::Escape($using:sqlagentuser))" }
     }
 }
 
