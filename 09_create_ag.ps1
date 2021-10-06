@@ -31,7 +31,7 @@ $agParams = @{
     SeedingMode  = "Automatic"
     FailoverMode = "Automatic"
     Confirm      = $false
-    Verbose      = $true
+    Verbose      = $false
 }
 New-DbaAvailabilityGroup @agParams
 
