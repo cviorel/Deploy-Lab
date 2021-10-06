@@ -16,7 +16,7 @@ if (!(Test-Path -Path $setupPath)) {
 }
 #endregion Prerequisites
 
-#region AV settings
+#region AV settings - Disable RealtimeMonitoring
 $scriptBlock = {
     Write-Output "$env:COMPUTERNAME - Disabling Defender's real-time monitoring during the installation process"
 
@@ -29,7 +29,7 @@ $scriptBlock = {
 }
 
 Invoke-Command -ComputerName $($sqlNodes.Keys) -ScriptBlock $scriptBlock
-#endregion AV settings
+#endregion AV settings - Disable RealtimeMonitoring
 
 #region Check Repos
 if (!(Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue)) {
@@ -75,11 +75,11 @@ foreach ($service in $serviceAccounts) {
 }
 #endregion Check Service Accounts
 
-# region cleanup memory by removing modules that we don't need
+#region Cleanup memory by removing modules that we don't need
 Get-Module -Name ActiveDirectory | Remove-Module
 Get-Module -Name PowerShellGet | Remove-Module
 Get-Module -Name PackageManagement | Remove-Module
-# endregion cleanup memory by removing modules that we don't need
+#endregion Cleanup memory by removing modules that we don't need
 
 #region SQL Install
 $Credentials = New-Object System.Management.Automation.PSCredential("Administrator", ($SafeModeAdminPassword | ConvertTo-SecureString -AsPlainText -Force))
@@ -119,7 +119,9 @@ if (($result.Successful -contains $false) -or ($null -eq $result)) {
 }
 #endregion SQL Install
 
+#region AV settings - Enable RealtimeMonitoring
 Invoke-Command -ComputerName $($sqlNodes.Keys) -ScriptBlock { Set-MpPreference -DisableRealtimeMonitoring $false }
+#endregion AV settings - Enable RealtimeMonitoring
 
 #region SQL Post Install
 $scriptBlockSQLPostInstall = {
@@ -263,8 +265,8 @@ foreach ($node in $sqlNodes.Keys) {
     Set-DbaMaxMemory -SqlInstance $sqlInstance
     Set-DbaErrorLogConfig -SqlInstance $sqlInstance -LogCount 25 -LogSize 102400 # 100 MB
 
-    # Suppress all successful backups in SQL server error log
-    Set-DbaStartupParameter -SqlInstance "$node\$SQLInstanceName" -TraceFlag 3226, 7745 -Confirm:$false -Force
+    # https://docs.microsoft.com/en-us/sql/t-sql/database-console-commands/dbcc-traceon-trace-flags-transact-sql?view=sql-server-ver15
+    Set-DbaStartupParameter -SqlInstance "$node\$SQLInstanceName" -TraceFlag 3226, 7745 -Confirm:$false -Force -WarningAction SilentlyContinue
 
     # Rename and disable SA
     Get-DbaLogin -SqlInstance $sqlInstance -Login 'sa' | Set-DbaLogin -NewName 'sqladmin' -Disable
