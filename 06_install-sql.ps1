@@ -116,6 +116,9 @@ $result = Install-DbaInstance @config -Credential $Credentials
 
 if (($result.Successful -contains $false) -or ($null -eq $result)) {
     throw "Failed to install SQL Server!"
+} else {
+    Write-Host ":: SQL Server installation was successful!" -ForegroundColor Magenta
+    $result
 }
 #endregion SQL Install
 

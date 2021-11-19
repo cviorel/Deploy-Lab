@@ -52,7 +52,6 @@ function Install-SSMS {
 
     .EXAMPLE
         Install-SSMS -InstallAzureDataStudio $false -WriteLog $true -LocalFile C:\Users\Administrator\Downloads\SSMS-Setup-ENU.exe
-
         Silently installs SSMS without Azure Data Studio from the C:\Users\Administrator\Downloads\SSMS-Setup-ENU.exe local file
 
     #>
